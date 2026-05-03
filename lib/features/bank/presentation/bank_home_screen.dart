@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../services/supabase_service.dart';
 import '../../../core/theme.dart';
@@ -267,4 +268,37 @@ class _BankHomeScreenState extends State<BankHomeScreen> {
       title: Text(t['title']), subtitle: Text(t['date']), trailing: Text(t['amount'], style: TextStyle(color: t['in'] ? Colors.green : Colors.red, fontWeight: FontWeight.bold)),
     )).toList())), actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close'))],
   ));
+
+  void _showReceipt(Map<String, dynamic> txn) {
+    showDialog(context: context, builder: (_) => AlertDialog(
+      title: Row(children: [const Icon(Icons.receipt_long, color: AppColors.ethiopianGreen), const SizedBox(width: 8), const Text('Transaction Receipt')]),
+      content: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(border: Border.all(color: AppColors.ethiopianGreen, width: 2), borderRadius: BorderRadius.circular(8)),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Center(child: Column(children: [
+              Text('TeleBank', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.navyBlue)),
+              const Text('Transaction Receipt', style: TextStyle(fontSize: 12, color: Colors.grey)),
+              const Divider(),
+            ])),
+            const SizedBox(height: 12),
+            _receiptRow('Type', txn['title']),
+            _receiptRow('Amount', txn['amount']),
+            _receiptRow('Status', txn['in'] ? '✅ Credited' : '✅ Debited'),
+            _receiptRow('Date', txn['date']),
+            _receiptRow('Account', '****1234'),
+            const Divider(),
+            Center(child: Text(_username.isEmpty ? 'User' : '@$_username', style: const TextStyle(fontWeight: FontWeight.bold))),
+            const SizedBox(height: 8),
+            Center(child: Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), decoration: BoxDecoration(color: txn['in'] ? AppColors.success.withOpacity(0.2) : AppColors.error.withOpacity(0.2), borderRadius: BorderRadius.circular(4)), child: Text(txn['in'] ? 'SUCCESS' : 'SENT', style: TextStyle(color: txn['in'] ? AppColors.success : AppColors.error, fontWeight: FontWeight.bold)))),
+          ])),
+      ])),
+      actions: [
+        TextButton(onPressed: () { Clipboard.setData(ClipboardData(text: 'TeleBank Receipt\\n${txn['title']}\\n${txn['amount']}\\n${txn['date']}')); ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Receipt copied!'))); }, child: const Text('Copy')),
+        FilledButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
+      ],
+    ));
+  }
+
+  Widget _receiptRow(String label, String value) => Padding(padding: const EdgeInsets.symmetric(vertical: 4), child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text(label, style: const TextStyle(color: Colors.grey)), Text(value, style: const TextStyle(fontWeight: FontWeight.bold))]));
+
 }
