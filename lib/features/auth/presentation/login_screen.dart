@@ -3,15 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/theme.dart';
-import '../../../services/supabase_service.dart';
 
 class LoginScreen extends StatefulWidget {
-  final VoidCallback? onThemeChanged;
-  const LoginScreen({super.key, this.onThemeChanged});
+  const LoginScreen({super.key});
   @override State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin {
+class _LoginScreenState extends State<LoginScreen> {
   final LocalAuthentication _auth = LocalAuthentication();
   String _pin = '';
   String _storedPin = '';
@@ -20,8 +18,8 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
   String _setupPin = '';
   String _error = '';
   bool _canBio = false;
-  bool _bioAvailable = false;
   bool _loading = false;
+  String _statusText = '';
 
   @override void initState() { super.initState(); _checkAuth(); }
 
@@ -30,23 +28,62 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     final prefs = await SharedPreferences.getInstance();
     _storedPin = prefs.getString('app_pin') ?? '';
     _isSetup = _storedPin.isNotEmpty;
+
+    // Check biometric properly
     try {
-      _bioAvailable = await _auth.canCheckBiometrics;
+      final isAvailable = await _auth.isDeviceSupported();
       final bios = await _auth.getAvailableBiometrics();
-      _canBio = _bioAvailable && bios.isNotEmpty;
-    } catch (_) { _bioAvailable = false; _canBio = false; }
-    setState(() => _loading = false);
-    if (_isSetup && _canBio) { await Future.delayed(const Duration(milliseconds: 500)); if (mounted) _tryBio(); }
+      _canBio = isAvailable && bios.isNotEmpty;
+      _statusText = _canBio ? 'Fingerprint available' : 'No biometric';
+    } catch (e) {
+      _canBio = false;
+      _statusText = 'Biometric error: ${e.toString().substring(0, 50)}';
+    }
+    if (mounted) setState(() => _loading = false);
+
+    // Auto-prompt biometric if returning user
+    if (_isSetup && _canBio) {
+      await Future.delayed(const Duration(milliseconds: 800));
+      if (mounted) _tryBio();
+    }
   }
 
   Future<void> _tryBio() async {
     if (!_canBio) return;
+    setState(() => _statusText = 'Scanning fingerprint...');
     try {
-      final ok = await _auth.authenticate(localizedReason: 'Unlock TeleBank', options: const AuthenticationOptions(stickyAuth: true, biometricOnly: true));
-      if (ok && mounted) { HapticFeedback.lightImpact(); _goDashboard(); }
+      final ok = await _auth.authenticate(
+        localizedReason: 'Unlock TeleBank to access your account',
+        options: const AuthenticationOptions(
+          stickyAuth: true,
+          biometricOnly: true,
+          useErrorDialogs: true,
+        ),
+      );
+      if (ok && mounted) {
+        HapticFeedback.lightImpact();
+        _goDashboard();
+      }
     } on PlatformException catch (e) {
-      if (mounted && (e.code == 'NotRecognized' || e.code == 'NoBiometricAvailable')) { setState(() => _error = 'Fingerprint not recognized'); HapticFeedback.vibrate(); }
-    } catch (_) {}
+      if (!mounted) return;
+      switch (e.code) {
+        case 'NotRecognized':
+        case 'NoBiometricAvailable':
+          setState(() { _error = 'Fingerprint not recognized'; _statusText = ''; });
+          break;
+        case 'LockedOut':
+          setState(() { _error = 'Too many attempts. Use PIN.'; _statusText = ''; });
+          break;
+        case 'NotEnrolled':
+          setState(() { _error = 'No fingerprint enrolled on device'; _statusText = ''; });
+          break;
+        default:
+          setState(() { _statusText = 'Try PIN instead'; });
+      }
+      HapticFeedback.vibrate();
+    } catch (_) {
+      if (mounted) setState(() => _statusText = 'Use PIN to login');
+    }
   }
 
   void _tap(String d) {
@@ -58,26 +95,24 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
 
   void _backspace() { if (_pin.isNotEmpty) setState(() => _pin = _pin.substring(0, _pin.length - 1)); }
 
-  void _checkPin() async {
-    setState(() => _loading = true);
+  void _checkPin() {
     if (!_isSetup) {
       if (!_confirmMode) {
-        setState(() { _setupPin = _pin; _confirmMode = true; _pin = ''; _error = 'Confirm your PIN'; _loading = false; });
+        setState(() { _setupPin = _pin; _confirmMode = true; _pin = ''; _error = 'Confirm your PIN'; });
       } else {
-        if (_pin == _setupPin) {
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('app_pin', _pin);
-          if (mounted) _goDashboard();
-        } else { setState(() { _error = 'PINs do not match'; _confirmMode = false; _setupPin = ''; _pin = ''; _loading = false; }); HapticFeedback.vibrate(); }
+        if (_pin == _setupPin) { _savePinAndGo(_pin); }
+        else { setState(() { _error = 'PINs do not match'; _confirmMode = false; _setupPin = ''; _pin = ''; }); HapticFeedback.vibrate(); }
       }
     } else {
-      // Returning user - try Supabase login if available
-      final result = await SupabaseService.login(_storedPin.substring(0, 1), _pin); // dummy check - real auth uses username
-      // For now, local PIN check (Supabase auth integrates after deployment)
       if (_pin == _storedPin) { _goDashboard(); }
-      else { setState(() { _error = 'Wrong PIN'; _pin = ''; _loading = false; }); HapticFeedback.vibrate(); }
+      else { setState(() { _error = 'Wrong PIN'; _pin = ''; }); HapticFeedback.vibrate(); }
     }
-    if (mounted && _loading) setState(() => _loading = false);
+  }
+
+  Future<void> _savePinAndGo(String pin) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('app_pin', pin);
+    if (mounted) _goDashboard();
   }
 
   void _goDashboard() { Navigator.pushReplacementNamed(context, '/dashboard'); }
@@ -93,42 +128,48 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                if (_loading) const CircularProgressIndicator(color: Colors.white) else ...[
-                  Container(width: 100, height: 100,
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(50), boxShadow: AppColors.getShadow(8)),
-                    child: const Icon(Icons.account_balance_wallet, size: 50, color: AppColors.navyBlue)),
-                  const SizedBox(height: 24),
-                  const Text('TeleBank', style: TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  Text(_isSetup ? 'Enter your PIN' : (_confirmMode ? 'Confirm PIN' : 'Create a PIN'),
-                    style: const TextStyle(color: Colors.white70, fontSize: 16)),
-                  if (_error.isNotEmpty) ...[const SizedBox(height: 8), Text(_error, style: const TextStyle(color: Colors.redAccent))],
-                  const SizedBox(height: 32),
-                  Row(mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(4, (i) => AnimatedContainer(
-                      margin: const EdgeInsets.symmetric(horizontal: 8),
-                      width: 16, height: 16,
-                      duration: const Duration(milliseconds: 100),
-                      decoration: BoxDecoration(shape: BoxShape.circle,
-                        color: i < _pin.length ? AppColors.warmGold : Colors.transparent,
-                        border: Border.all(color: AppColors.warmGold, width: 2))))),
-                  const SizedBox(height: 40),
-                  GridView.count(shrinkWrap: true, crossAxisCount: 3, childAspectRatio: 1.5, mainAxisSpacing: 12, crossAxisSpacing: 12, padding: EdgeInsets.zero,
-                    children: [
-                      for (var i = 1; i <= 9; i++) _btn('$i', () => _tap('$i')),
-                      const SizedBox.shrink(),
-                      _btn('0', () => _tap('0')),
-                      _btnIcon(Icons.backspace_outlined, _backspace),
-                    ]),
-                  const Spacer(),
-                  if (_isSetup && _canBio)
-                    Padding(padding: const EdgeInsets.only(bottom: 20),
-                      child: OutlinedButton.icon(
-                        onPressed: _tryBio,
+                Container(width: 100, height: 100,
+                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(50), boxShadow: AppColors.getShadow(8)),
+                  child: const Icon(Icons.account_balance_wallet, size: 50, color: AppColors.navyBlue)),
+                const SizedBox(height: 24),
+                const Text('TeleBank', style: TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                Text(_isSetup ? 'Enter your PIN' : (_confirmMode ? 'Confirm PIN' : 'Create a PIN'),
+                  style: const TextStyle(color: Colors.white70, fontSize: 16)),
+                if (_statusText.isNotEmpty && _error.isEmpty) ...[const SizedBox(height: 4), Text(_statusText, style: const TextStyle(color: Colors.white54, fontSize: 12))],
+                if (_error.isNotEmpty) ...[const SizedBox(height: 8), Text(_error, style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold))],
+                const SizedBox(height: 24),
+                Row(mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(4, (i) => AnimatedContainer(
+                    margin: const EdgeInsets.symmetric(horizontal: 8),
+                    width: 16, height: 16,
+                    duration: const Duration(milliseconds: 100),
+                    decoration: BoxDecoration(shape: BoxShape.circle,
+                      color: i < _pin.length ? AppColors.warmGold : Colors.transparent,
+                      border: Border.all(color: AppColors.warmGold, width: 2))))),
+                const SizedBox(height: 32),
+                GridView.count(shrinkWrap: true, crossAxisCount: 3, childAspectRatio: 1.5, mainAxisSpacing: 12, crossAxisSpacing: 12, padding: EdgeInsets.zero,
+                  children: [
+                    for (var i = 1; i <= 9; i++) _btn('$i', () => _tap('$i')),
+                    const SizedBox.shrink(),
+                    _btn('0', () => _tap('0')),
+                    _btnIcon(Icons.backspace_outlined, _backspace),
+                  ]),
+                const Spacer(),
+                if (_isSetup)
+                  Padding(padding: const EdgeInsets.only(bottom: 20),
+                    child: Column(children: [
+                      OutlinedButton.icon(
+                        onPressed: _canBio ? _tryBio : null,
                         icon: const Icon(Icons.fingerprint, size: 32),
-                        label: const Text('Use Fingerprint', style: TextStyle(fontSize: 16)),
-                        style: OutlinedButton.styleFrom(side: const BorderSide(color: Colors.white30, width: 2), padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12), foregroundColor: Colors.white))),
-                ],
+                        label: Text(_canBio ? 'Use Fingerprint' : 'No Biometric Available',
+                          style: TextStyle(fontSize: 16, color: _canBio ? Colors.white : Colors.white30)),
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: _canBio ? Colors.white30 : Colors.white10, width: 2),
+                          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12))),
+                      const SizedBox(height: 8),
+                      Text('Or enter your PIN above', style: TextStyle(color: Colors.white54, fontSize: 12)),
+                    ])),
               ],
             ),
           ),

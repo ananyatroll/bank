@@ -65,21 +65,33 @@ class _BankHomeScreenState extends State<BankHomeScreen> {
   void _showUsernameDialog() {
     final ctrl = TextEditingController();
     String err = '';
+    bool checking = false;
     showDialog(context: context, barrierDismissible: false, builder: (ctx) => StatefulBuilder(builder: (ctx2, s) => AlertDialog(
       title: const Text('👤 Create Username'),
       content: Column(mainAxisSize: MainAxisSize.min, children: [
-        const Text('Choose a username to send and receive birr.'),
+        const Text('Choose a username to send and receive birr. Must be unique!'),
         const SizedBox(height: 12),
-        TextField(controller: ctrl, decoration: InputDecoration(labelText: 'Username', prefixText: '@', errorText: err.isEmpty ? null : err), autofocus: true),
-        const SizedBox(height: 8), const Text('3-20 chars, letters, numbers, underscores', style: TextStyle(fontSize: 12, color: Colors.grey)),
+        TextField(controller: ctrl, decoration: InputDecoration(labelText: 'Username', prefixText: '@', errorText: err.isEmpty ? null : err, suffixIcon: checking ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : null), autofocus: true),
+        const SizedBox(height: 8), const Text('3-20 chars, letters, numbers, underscores only', style: TextStyle(fontSize: 12, color: Colors.grey)),
       ]),
-      actions: [FilledButton(onPressed: () {
-        final u = ctrl.text.trim();
+      actions: [FilledButton(onPressed: checking ? null : () async {
+        final u = ctrl.text.trim().toLowerCase();
         if (u.length < 3 || u.length > 20 || !RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(u)) { s(() => err = u.isEmpty ? 'Required' : 'Invalid format'); return; }
-        SharedPreferences.getInstance().then((p) => p.setString('username', u));
+        // Check if username exists on Supabase
+        s(() { checking = true; err = ''; });
+        try {
+          final existing = await SupabaseService.supabase.from('users').select().eq('username', u).maybeSingle();
+          if (existing != null) { s(() { err = 'Username already taken! Try another.'; checking = false; }); return; }
+        } catch (_) {}
+        // Register on Supabase
+        final result = await SupabaseService.register(u, '1234'); // temp pin for now
+        if (result.containsKey('error')) { s(() { err = result['error'].toString(); checking = false; }); return; }
+        final p = await SharedPreferences.getInstance();
+        await p.setString('username', u);
+        await p.setString('supabase_user_id', result['id']);
         setState(() => _username = u);
         Navigator.pop(ctx);
-      }, child: const Text('Continue'))],
+      }, child: checking ? const Text('Checking...') : const Text('Continue'))],
     )));
   }
 
@@ -106,6 +118,11 @@ class _BankHomeScreenState extends State<BankHomeScreen> {
 
   void _showSendBirr() { _checkUsername(); _showDialog(title: '💸 Send Birr', icon: Icons.send, color: AppColors.ethiopianGreen, fieldLabel: 'Recipient @Username', fieldHint: 'john_doe', onConfirm: (val, amt) async {
     if (val.isEmpty) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter username'))); return; }
+    // Verify recipient exists
+    try {
+      final recipient = await SupabaseService.supabase.from('users').select().eq('username', val.toLowerCase()).maybeSingle();
+      if (recipient == null) { ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('User @$val not found'))); return; }
+    } catch (_) {}
     if (_userId != null) {
       final result = await SupabaseService.sendMoney(_userId!, val, amt, 'send');
       if (result.containsKey('error')) {
