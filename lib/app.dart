@@ -33,7 +33,7 @@ class _TeleBankAppState extends State<TeleBankApp> {
       home: const LoginScreen(),
       routes: {
         '/bank-select': (_) => const BankSelectScreen(),
-        '/dashboard': (_) => DashboardScreen(onThemeChanged: () { _loadTheme(); }),
+        '/dashboard': (_) => const DashboardScreen(),
       },
     );
   }
