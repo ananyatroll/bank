@@ -1,0 +1,95 @@
+{
+  "app_name": "ቴሌባንክ",
+  "app_tagline": "ዘመናዊ ኢትዮጵያ ባንኪንግ",
+  
+  "auth": {
+    "setup_pin": "ፒን ያዘጋጁ",
+    "create_pin": "ፒንዎን ይፍጠሩ",
+    "confirm_pin": "ፒን ያረጋግጡ",
+    "enter_pin": "ፒን ያስገቡ",
+    "pin_required": "ፒን ያስፈልጋል",
+    "pin_length": "ፒን {} አሃዞች መሆን አለበት",
+    "pin_mismatch": "ፒኖች አይዛመዱም",
+    "enable_biometric": "ባዮሜትሪክ ያነቁ",
+    "biometric_desc": "ለፈጣን ተደራሽነት የጣት አሻራ ወይም ፊት ይጠቀሙ",
+    "skip": "ለአሁኑ ይዝለሉ",
+    "continue": "ቀጥል"
+  },
+  
+  "dashboard": {
+    "home": "መነሻ",
+    "banks": "ባንኮች",
+    "crypto": "ክሪፕቶ",
+    "settings": "ቅንብሮች",
+    "total_balance": "ጠቅላላ ቀሪ ሂሳብ",
+    "linked_accounts": "የተያያዙ ሂሳቦች",
+    "quick_actions": "ፈጣን ተግባራት",
+    "recent_transactions": "የቅርብ ጊዜ ግብይቶች",
+    "no_accounts": "ምንም ሂሳቦች አልተያያዙም",
+    "link_account": "ሂሳብ ያያይዙ",
+    "no_transactions": "ገና ግብይት የለም",
+    "sync_sms": "SMS ያስተሳስሩ",
+    "dial_ussd": "USSD ይደውሉ"
+  },
+  
+  "banks": {
+    "cbe": "ንግድ ባንክ ኢትዮጵያ",
+    "dashen": "ዳሽን ባንክ",
+    "awash": "ዋዋሽ ባንክ",
+    "coop": "የኦሮሚያ ህብረት ስራ ባንክ",
+    "select_bank": "ባንክ ይምረጡ",
+    "balance": "ቀሪ ሂሳብ",
+    "transfer": "ዝውውር",
+    "mini_statement": "አጭር መግለጫ",
+    "change_pin": "ፒን ቀይር",
+    "available_balance": "የሚገኝ ቀሪ ሂሳብ",
+    "account_number": "የሂሳብ ቁጥር"
+  },
+  
+  "ussd": {
+    "dialing": "በመደወል ላይ...",
+    "session_active": "USSD ክፍለ ጊዜ ንቁ ነው",
+    "send": "ላክ",
+    "cancel": "ሰርዝ",
+    "dial": "*888# ይደውሉ",
+    "no_service": "USSD አገልግሎት የለም",
+    "select_option": "አማራጭ ይምረጡ"
+  },
+  
+  "sms": {
+    "syncing": "SMS በማስተሳሰር ላይ...",
+    "sync_complete": "ማስተሳሰር ተጠናቋል",
+    "no_permission": "የSMS ፍቃድ ያስፈልጋል",
+    "request_permission": "ፍቃድ ይጠይቁ",
+    "last_sync": "የመጨረሻ ማስተሳሰር: {}",
+    "transactions": "ግብይቶች"
+  },
+  
+  "wallet": {
+    "ton_wallet": "TON የገንዘብ አደራ",
+    "eth_wallet": "ኢትዩሪየም የገንዘብ አደራ",
+    "address": "አድራሻ",
+    "balance": "ቀሪ ሂሳብ",
+    "send": "ላክ",
+    "receive": "ቅበል",
+    "copy_address": "አድራሻ ቅዳ",
+    "copied": "ተቅዷል!",
+    "testnet_only": "ለሙከራ ብቻ",
+    "create_wallet": "የገንዘብ አደራ ይፍጠሩ",
+    "mnemonic_warning": "የማስታወሻ ቃልዎን በደህና ያስቀምጡ"
+  },
+  
+  "common": {
+    "ok": "እሺ",
+    "cancel": "ሰርዝ",
+    "retry": "እንደገና ሞክር",
+    "loading": "በመጫን ላይ...",
+    "error": "ስህተት",
+    "success": "ተሳክቷል",
+    "save": "አስቀምጥ",
+    "delete": "ሰርዝ",
+    "back": "ተመለስ",
+    "next": "ቀጣይ",
+    "done": "ተጠናቋል"
+  }
+}

@@ -1,0 +1,95 @@
+{
+  "app_name": "TeleBank",
+  "app_tagline": "Modern Ethiopian Banking",
+  
+  "auth": {
+    "setup_pin": "Set Up PIN",
+    "create_pin": "Create Your PIN",
+    "confirm_pin": "Confirm PIN",
+    "enter_pin": "Enter PIN",
+    "pin_required": "PIN is required",
+    "pin_length": "PIN must be {} digits",
+    "pin_mismatch": "PINs do not match",
+    "enable_biometric": "Enable Biometric Auth",
+    "biometric_desc": "Use your fingerprint or face ID for quick access",
+    "skip": "Skip for Now",
+    "continue": "Continue"
+  },
+  
+  "dashboard": {
+    "home": "Home",
+    "banks": "Banks",
+    "crypto": "Crypto",
+    "settings": "Settings",
+    "total_balance": "Total Balance",
+    "linked_accounts": "Linked Accounts",
+    "quick_actions": "Quick Actions",
+    "recent_transactions": "Recent Transactions",
+    "no_accounts": "No accounts linked yet",
+    "link_account": "Link Account",
+    "no_transactions": "No transactions yet",
+    "sync_sms": "Sync SMS",
+    "dial_ussd": "Dial USSD"
+  },
+  
+  "banks": {
+    "cbe": "Commercial Bank of Ethiopia",
+    "dashen": "Dashen Bank",
+    "awash": "Awash Bank",
+    "coop": "Cooperative Bank of Oromia",
+    "select_bank": "Select Bank",
+    "balance": "Balance",
+    "transfer": "Transfer",
+    "mini_statement": "Mini Statement",
+    "change_pin": "Change PIN",
+    "available_balance": "Available Balance",
+    "account_number": "Account Number"
+  },
+  
+  "ussd": {
+    "dialing": "Dialing...",
+    "session_active": "USSD Session Active",
+    "send": "Send",
+    "cancel": "Cancel",
+    "dial": "Dial *888#",
+    "no_service": "USSD service not available",
+    "select_option": "Select an option"
+  },
+  
+  "sms": {
+    "syncing": "Syncing SMS...",
+    "sync_complete": "Sync Complete",
+    "no_permission": "SMS permission required",
+    "request_permission": "Request Permission",
+    "last_sync": "Last Sync: {}",
+    "transactions": "Transactions"
+  },
+  
+  "wallet": {
+    "ton_wallet": "TON Wallet",
+    "eth_wallet": "Ethereum Wallet",
+    "address": "Address",
+    "balance": "Balance",
+    "send": "Send",
+    "receive": "Receive",
+    "copy_address": "Copy Address",
+    "copied": "Copied!",
+    "testnet_only": "Testnet Only",
+    "create_wallet": "Create Wallet",
+    "mnemonic_warning": "Write down your mnemonic phrase securely"
+  },
+  
+  "common": {
+    "ok": "OK",
+    "cancel": "Cancel",
+    "retry": "Retry",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "save": "Save",
+    "delete": "Delete",
+    "back": "Back",
+    "next": "Next",
+    "done": "Done"
+  }
+}

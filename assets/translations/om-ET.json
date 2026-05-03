@@ -1,0 +1,95 @@
+{
+  "app_name": "TeleBank",
+  "app_tagline": "Haaraa Baankii Itoophiyaa",
+  
+  "auth": {
+    "setup_pin": "PIN Qophessi",
+    "create_pin": "PIN Kee Uumi",
+    "confirm_pin": "PIN Mirkaneessi",
+    "enter_pin": "PIN Galchi",
+    "pin_required": "PIN barbaachisa",
+    "pin_length": "PIN lakkoofsa {} ta'uu qaba",
+    "pin_mismatch": "PIN wal hin simne",
+    "enable_biometric": "Biometric Labsi",
+    "biometric_desc": "Argama ariifataaf quba yookiin fuula fayyadami",
+    "skip": "Ammaaf Toli",
+    "continue": "Itti Fufi"
+  },
+  
+  "dashboard": {
+    "home": "Mana",
+    "banks": "Baankii",
+    "crypto": "Crypto",
+    "settings": "Sajoo",
+    "total_balance": "Hafee Waliigalaa",
+    "linked_accounts": "Herrega Hidhame",
+    "quick_actions": "Gocha Ariifataa",
+    "recent_transactions": "Daldala Dhihoo",
+    "no_accounts": "Herregni hin hidhamne",
+    "link_account": "Herrega Hidhi",
+    "no_transactions": "Daldalli hin jiru",
+    "sync_sms": "SMS Sinkii",
+    "dial_ussd": "USSD Bilbili"
+  },
+  
+  "banks": {
+    "cbe": "Baankii Daldabaa Itoophiyaa",
+    "dashen": "Baankii Daashen",
+    "awash": "Baankii Awaash",
+    "coop": "Baankii Cooperaativaa Oromiyaa",
+    "select_bank": "Baankii Filadhu",
+    "balance": "Hafee",
+    "transfer": "Dabarsi",
+    "mini_statement": "Ibsa Gabaabaa",
+    "change_pin": "PIN Jijjiiri",
+    "available_balance": "Hafee Argama",
+    "account_number": "Lakkoofsa Herregaa"
+  },
+  
+  "ussd": {
+    "dialing": "Bilbilamaa jira...",
+    "session_active": "Tajaajila USSD Aktiivii",
+    "send": "Ergi",
+    "cancel": "Haadhi",
+    "dial": "*888# Bilbili",
+    "no_service": "Tajaajila USSD hin jiru",
+    "select_option": "Filannoo Filadhu"
+  },
+  
+  "sms": {
+    "syncing": "SMS Sinkii ta'aa jira...",
+    "sync_complete": "Sinkii Xumurame",
+    "no_permission": "Eeyyama SMS barbaachisa",
+    "request_permission": "Eeyyama Gaafadhu",
+    "last_sync": "Sinkii Dhumaa: {}",
+    "transactions": "Daldala"
+  },
+  
+  "wallet": {
+    "ton_wallet": "Kaabaa TON",
+    "eth_wallet": "Kaabaa Ethereum",
+    "address": "Teessoo",
+    "balance": "Hafee",
+    "send": "Ergi",
+    "receive": "Fudhadhu",
+    "copy_address": "Teessoo Kopii",
+    "copied": "Kopii ta'e!",
+    "testnet_only": "Testnet Qofa",
+    "create_wallet": "Kaabaa Uumi",
+    "mnemonic_warning": "Jecha yaadannoo kee nageenyaan kuusi"
+  },
+  
+  "common": {
+    "ok": "TOLE",
+    "cancel": "Haadhi",
+    "retry": "Irra deebi'i",
+    "loading": "Fe'amaa jira...",
+    "error": "Dogoggora",
+    "success": "Milkaa'ina",
+    "save": "Kuusi",
+    "delete": "Haadhi",
+    "back": "Deebi'i",
+    "next": "Itti Aanu",
+    "done": "Xumurame"
+  }
+}

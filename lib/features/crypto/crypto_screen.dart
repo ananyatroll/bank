@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
-import '../../core/utils/formatters.dart';
+import '../../core/utils/formatters.dart' show AppFormatters;
 import '../../providers.dart';
 
 class CryptoScreen extends ConsumerWidget {
@@ -30,7 +30,7 @@ class CryptoScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      formatMoney(wallet.balance, currency: 'TON'),
+                      AppFormatters.formatMoney(wallet.balance, currency: 'TON'),
                       style: Theme.of(context)
                           .textTheme
                           .headlineSmall

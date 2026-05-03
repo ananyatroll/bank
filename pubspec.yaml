@@ -1,31 +1,96 @@
 name: telebank_ui
-description: TeleBank UI MVP
-publish_to: "none"
-version: 0.1.0+1
+description: Modern Ethiopian USSD Banking with SMS Sync & Crypto Wallet
+version: 1.0.0+1
 
 environment:
-  sdk: ">=3.3.0 <4.0.0"
+  sdk: '>=3.0.0 <4.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
-  cupertino_icons: ^1.0.6
-  flutter_riverpod: ^2.5.1
+  flutter_localizations:
+    sdk: flutter
+  
+  # State Management
+  flutter_riverpod: ^2.4.9
+  
+  # Local Storage & Database
   hive: ^2.2.3
   hive_flutter: ^1.1.0
-  flutter_secure_storage: ^9.2.2
-  local_auth: ^2.2.0
-  permission_handler: ^11.3.1
-  url_launcher: ^6.2.6
-  qr_flutter: ^4.1.0
+  flutter_secure_storage: ^9.0.0
+  shared_preferences: ^2.2.2
+  
+  # Biometric Authentication
+  local_auth: ^2.1.7
+  
+  # USSD & SMS Handling
+  permission_handler: ^11.1.0
+  url_launcher: ^6.2.1
+  
+  # Cryptocurrency Wallets
   bip39: ^1.0.6
-  tondart: ^0.3.0
-  intl: ^0.19.0
-  google_fonts: ^6.2.1
+  ed25519_edwards: ^0.3.1
+  pointycastle: ^3.7.4
+  
+  # UI Components
+  cupertino_icons: ^1.0.6
+  flutter_svg: ^2.0.9
+  cached_network_image: ^3.3.0
+  shimmer: ^3.0.0
+  flutter_animate: ^4.3.0
+  
+  # QR Code
+  qr_flutter: ^4.1.0
+  
+  # Charts & Visualization
+  fl_chart: ^0.65.0
+  percent_indicator: ^4.2.3
+  
+  # Networking
+  dio: ^5.3.3
+  http: ^1.1.0
+  
+  # Localization
+  intl: ^0.20.2
+  easy_localization: ^3.0.3
+  
+  # Encryption & Security
+  encrypt: ^5.0.3
   crypto: ^3.0.3
+  
+  # Utilities
+  uuid: ^4.2.1
+  collection: ^1.18.0
+  equatable: ^2.0.5
+  
+  # Icons
+  material_design_icons_flutter: ^7.0.7296
+  ionicons: ^0.2.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^3.0.0
-  flutter_launcher_icons: ^0.13.1
+  flutter_lints: ^3.0.1
+  hive_generator: ^2.0.1
+  build_runner: ^2.4.7
+  mockito: ^5.4.4
+
+flutter:
+  uses-material-design: true
+  
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/translations/
+  
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Regular.ttf
+        - asset: assets/fonts/Inter-Bold.ttf
+          weight: 700
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/Poppins-Regular.ttf
+        - asset: assets/fonts/Poppins-SemiBold.ttf
+          weight: 600

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/utils/formatters.dart';
+import '../../../core/utils/formatters.dart' show AppFormatters;
 import '../../../data/models/bank_models.dart';
 
 class TransactionList extends StatelessWidget {
@@ -35,7 +35,7 @@ class TransactionList extends StatelessWidget {
                   : Icons.arrow_upward,
             ),
             title: Text(txn.title),
-            subtitle: Text(formatDateTime(txn.timestamp)),
+            subtitle: Text(AppFormatters.formatDateTime(txn.timestamp)),
             trailing: Text('$sign${txn.amount.toStringAsFixed(2)}'),
           );
         },

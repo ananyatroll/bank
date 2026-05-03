@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/utils/formatters.dart';
+import '../../../core/utils/formatters.dart' show AppFormatters;
 import '../../../data/models/bank_models.dart';
 
 class BalanceCard extends StatelessWidget {
@@ -26,7 +26,7 @@ class BalanceCard extends StatelessWidget {
               duration: const Duration(milliseconds: 600),
               builder: (context, value, _) {
                 return Text(
-                  formatMoney(value, currency: balance.currency),
+                  AppFormatters.formatMoney(value, currency: balance.currency),
                   style: Theme.of(context)
                       .textTheme
                       .headlineSmall
@@ -37,7 +37,7 @@ class BalanceCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text('Acct ****${balance.last4}'),
             Text(
-              'Updated ${formatDateTime(balance.updatedAt)}',
+              'Updated ${AppFormatters.formatDateTime(balance.updatedAt)}',
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
