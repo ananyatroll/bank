@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/theme.dart';
-import '../../../services/ton_client.dart';
 import '../../../services/wallet_manager.dart';
 import '../../../services/transaction_service.dart';
 
@@ -27,19 +26,19 @@ class _CryptoScreenState extends State<CryptoScreen> {
   @override void initState() { super.initState(); _init(); }
 
   Future<void> _init() async {
+    if (!mounted) return;
     setState(() { _loading = true; _error = null; });
     try {
-      // Try to load existing wallet
       _wallet = await _walletManager.loadWallet();
       if (_wallet == null) {
-        // Create new wallet
         _wallet = await _walletManager.createWallet();
       }
-      // Fetch balance from chain
-      _balance = await _txService.getBalance(_wallet!);
+      // Try to fetch balance from chain (non-blocking)
+      try {
+        _balance = await _txService.getBalance(_wallet!);
+      } catch (_) { _balance = 0.0; }
       _usdValue = '\$${(_balance * _tonPrice).toStringAsFixed(2)}';
-      // Fetch transactions
-      _txns = await _txService.getTransactions(_wallet!, limit: 20);
+      try { _txns = await _txService.getTransactions(_wallet!, limit: 20); } catch (_) { _txns = []; }
     } catch (e) {
       _error = e.toString();
     }
@@ -47,19 +46,20 @@ class _CryptoScreenState extends State<CryptoScreen> {
   }
 
   Future<void> _refresh() async {
-    if (_wallet == null) { _init(); return; }
-    setState(() { _loading = true; });
+    if (_wallet == null || !mounted) { _init(); return; }
+    if (!mounted) return;
+    setState(() => _loading = true);
     try {
       _balance = await _txService.getBalance(_wallet!);
       _usdValue = '\$${(_balance * _tonPrice).toStringAsFixed(2)}';
       _txns = await _txService.getTransactions(_wallet!, limit: 20);
       await _txService.refreshSeqno(_wallet!);
-    } catch (e) { /* keep cached */ }
+    } catch (_) {}
     if (mounted) setState(() => _loading = false);
   }
 
   void _showReceive() {
-    if (_wallet == null) return;
+    if (_wallet == null || !mounted) return;
     showDialog(context: context, builder: (_) => AlertDialog(
       title: const Text('Receive TON'),
       content: Column(mainAxisSize: MainAxisSize.min, children: [
@@ -68,14 +68,14 @@ class _CryptoScreenState extends State<CryptoScreen> {
         SelectableText(_wallet!.userFriendlyAddress, style: const TextStyle(fontSize: 11)),
       ]),
       actions: [
-        TextButton(onPressed: () { Clipboard.setData(ClipboardData(text: _wallet!.userFriendlyAddress)); Navigator.pop(context); ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Address copied!'))); }, child: const Text('Copy')),
+        TextButton(onPressed: () { Clipboard.setData(ClipboardData(text: _wallet!.userFriendlyAddress)); Navigator.pop(context); if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Address copied!'))); }, child: const Text('Copy')),
         FilledButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
       ],
     ));
   }
 
   void _showSend() {
-    if (_wallet == null) return;
+    if (_wallet == null || !mounted) return;
     final addrCtrl = TextEditingController();
     final amtCtrl = TextEditingController();
     showDialog(context: context, builder: (_) => StatefulBuilder(builder: (ctx, s) => AlertDialog(
@@ -93,16 +93,16 @@ class _CryptoScreenState extends State<CryptoScreen> {
         TextButton(onPressed: _sending ? null : () => Navigator.pop(context), child: const Text('Cancel')),
         if (!_sending) FilledButton(onPressed: () async {
           final amt = double.tryParse(amtCtrl.text);
-          if (amt == null || amt <= 0) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter valid amount'))); return; }
-          if (amt > _balance) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Insufficient balance'))); return; }
+          if (amt == null || amt <= 0) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter valid amount'))); return; }
+          if (amt > _balance) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Insufficient balance'))); return; }
           final addr = addrCtrl.text.trim();
-          if (!addr.startsWith('EQ') && !addr.startsWith('UQ')) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Must start with EQ or UQ'))); return; }
+          if (!addr.startsWith('EQ') && !addr.startsWith('UQ')) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Must start with EQ or UQ'))); return; }
           s(() => _sending = true);
           try {
             await _txService.sendTon(wallet: _wallet!, destination: addr, amount: amt);
-            Navigator.pop(context);
+            if (mounted) Navigator.pop(context);
             _refresh();
-            if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Sent $amt TON to ${addr.substring(0, 12)}...')));
+            if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Sent $amt TON')));
           } catch (e) {
             s(() => _sending = false);
             if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
@@ -113,7 +113,7 @@ class _CryptoScreenState extends State<CryptoScreen> {
   }
 
   void _showMnemonic() {
-    if (_wallet == null) return;
+    if (_wallet == null || !mounted) return;
     showDialog(context: context, builder: (_) => AlertDialog(
       title: const Text('⚠️ Your 24-Word Mnemonic'),
       content: Column(mainAxisSize: MainAxisSize.min, children: [
@@ -124,13 +124,14 @@ class _CryptoScreenState extends State<CryptoScreen> {
         const Text('Anyone with these words can access your wallet!', style: TextStyle(fontSize: 11, color: Colors.red)),
       ]),
       actions: [
-        FilledButton(onPressed: () { Clipboard.setData(ClipboardData(text: _wallet!.mnemonic.join(' '))); Navigator.pop(context); ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Copied!'))); }, child: const Text('Copy')),
+        FilledButton(onPressed: () { Clipboard.setData(ClipboardData(text: _wallet!.mnemonic.join(' '))); Navigator.pop(context); if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Copied!'))); }, child: const Text('Copy')),
         FilledButton(onPressed: () => Navigator.pop(context), child: const Text('Done')),
       ],
     ));
   }
 
   void _showHistory() {
+    if (!mounted) return;
     showModalBottomSheet(context: context, isScrollControlled: true, builder: (_) => DraggableScrollableSheet(initialChildSize: 0.5, maxChildSize: 0.8, expand: false, builder: (_, c) => Column(children: [
       Padding(padding: const EdgeInsets.all(16), child: Text('Transaction History', style: Theme.of(context).textTheme.titleLarge)),
       const Divider(height: 1),
@@ -147,20 +148,19 @@ class _CryptoScreenState extends State<CryptoScreen> {
   Widget build(BuildContext context) {
     if (_loading && _wallet == null) {
       return const Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-        CircularProgressIndicator(), SizedBox(height: 16), Text('Initializing TON wallet...', style: TextStyle(color: Colors.grey)),
+        CircularProgressIndicator(), SizedBox(height: 16), Text('Initializing wallet...', style: TextStyle(color: Colors.grey)),
       ]));
     }
     if (_error != null && _wallet == null) {
       return Center(child: Padding(padding: const EdgeInsets.all(24), child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
         const Icon(Icons.error_outline, size: 64, color: Colors.red),
-        const SizedBox(height: 16), Text('Failed to initialize wallet:\n$_error', textAlign: TextAlign.center),
+        const SizedBox(height: 16), Text('Failed to initialize:\n$_error', textAlign: TextAlign.center),
         const SizedBox(height: 16), FilledButton(onPressed: _init, child: const Text('Retry')),
       ])));
     }
 
     return ListView(padding: const EdgeInsets.all(16), children: [
-      // Status banner
-      if (_loading) LinearProgressIndicator(),
+      if (_loading) const LinearProgressIndicator(),
       Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: AppColors.success.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
         child: Row(children: [
           const Icon(Icons.check_circle, color: AppColors.success), const SizedBox(width: 8),
@@ -192,7 +192,7 @@ class _CryptoScreenState extends State<CryptoScreen> {
         const SizedBox(height: 8), SelectableText(_wallet?.userFriendlyAddress ?? '', style: const TextStyle(fontFamily: 'monospace', fontSize: 12)),
         const SizedBox(height: 12),
         Row(children: [
-          Expanded(child: FilledButton.tonalIcon(onPressed: () { if (_wallet != null) { Clipboard.setData(ClipboardData(text: _wallet!.userFriendlyAddress)); ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Copied!'))); } }, icon: const Icon(Icons.copy, size: 18), label: const Text('Copy'))),
+          Expanded(child: FilledButton.tonalIcon(onPressed: () { if (_wallet != null && mounted) { Clipboard.setData(ClipboardData(text: _wallet!.userFriendlyAddress)); ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Copied!'))); } }, icon: const Icon(Icons.copy, size: 18), label: const Text('Copy'))),
           const SizedBox(width: 8),
           Expanded(child: FilledButton.tonalIcon(onPressed: _showReceive, icon: const Icon(Icons.qr_code, size: 18), label: const Text('QR Code'))),
         ])]))),
@@ -208,7 +208,7 @@ class _CryptoScreenState extends State<CryptoScreen> {
       Card(child: Padding(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         const Text('Get Free TON', style: TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8), const Text('Telegram: @testgiver_ton_bot\nSend your address for free testnet TON'),
-        const SizedBox(height: 12), FilledButton.tonalIcon(onPressed: () { if (_wallet != null) { Clipboard.setData(ClipboardData(text: _wallet!.userFriendlyAddress)); ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Address copied!'))); } }, icon: const Icon(Icons.copy_all, size: 18), label: const Text('Copy Address')),
+        const SizedBox(height: 12), FilledButton.tonalIcon(onPressed: () { if (_wallet != null && mounted) { Clipboard.setData(ClipboardData(text: _wallet!.userFriendlyAddress)); ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Address copied!'))); } }, icon: const Icon(Icons.copy_all, size: 18), label: const Text('Copy Address')),
       ]))),
       // Transactions
       if (_txns.isNotEmpty) ...[const SizedBox(height: 16), const Text('Transactions', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)), const SizedBox(height: 8),

@@ -5,25 +5,17 @@ class TonClientService {
   static TonClientService get instance => _instance;
   TonClientService._();
 
-  late final TonJsonRpc _client;
-  bool _initialized = false;
-
+  TonJsonRpc? _client;
   static const String testnetRpc = 'https://testnet.toncenter.com/api/v2/jsonRPC';
 
   TonJsonRpc get client {
-    if (!_initialized) throw StateError('Call init() first');
-    return _client;
+    _client ??= TonJsonRpc(testnetRpc, null, 15000);
+    return _client!;
   }
 
-  Future<void> init() async {
-    if (_initialized) return;
-    _client = TonJsonRpc(testnetRpc, null, 30000);
-    _initialized = true;
-  }
-
-  Future<bool> isTestnetReachable() async {
+  Future<bool> isInitialized() async {
     try {
-      await _client.getMasterchainInfo();
+      await client.getMasterchainInfo();
       return true;
     } catch (_) {
       return false;

@@ -6,17 +6,16 @@ import 'wallet_manager.dart';
 class TransactionService {
   final _walletManager = WalletManager();
 
-  /// Fetch balance in TON
   Future<double> getBalance(WalletState wallet) async {
     try {
       final client = TonClientService.instance.client;
-      final bal = await client.getBalance(wallet.address); return bal.toDouble() / 1e9;
-    } catch (e) {
+      final bal = await client.getBalance(wallet.address);
+      return bal.toDouble() / 1e9;
+    } catch (_) {
       return 0.0;
     }
   }
 
-  /// Fetch transaction history
   Future<List<WalletTransaction>> getTransactions(WalletState wallet, {int limit = 20}) async {
     try {
       final client = TonClientService.instance.client;
@@ -36,7 +35,6 @@ class TransactionService {
     }
   }
 
-  /// Send TON transfer
   Future<String> sendTon({
     required WalletState wallet,
     required String destination,
@@ -48,20 +46,16 @@ class TransactionService {
       final walletContract = WalletContractV4R2.create(publicKey: wallet.publicKey);
       final opened = client.open(walletContract);
 
-      // Get seqno from chain
       final seqno = await opened.getSeqno();
       wallet.seqno = seqno;
 
-      // Parse destination address
       final destAddr = InternalAddress.parse(destination);
 
-      // Build comment cell if provided
       ScString? body;
       if (comment != null && comment.isNotEmpty) {
         body = ScString(comment);
       }
 
-      // Create and sign transfer
       final transfer = opened.createTransfer(
         seqno: seqno,
         privateKey: wallet.privateKey,
@@ -75,20 +69,17 @@ class TransactionService {
         ],
       );
 
-      // Broadcast
       await opened.send(transfer);
 
-      // Increment seqno locally
       wallet.seqno = seqno + 1;
       await _walletManager.saveSeqno(wallet.seqno);
 
       return transfer.hash().toString();
     } catch (e) {
-      throw TonTransferException(e.toString());
+      throw TonTransferException('Transfer failed: $e');
     }
   }
 
-  /// Refresh seqno from chain
   Future<int> refreshSeqno(WalletState wallet) async {
     try {
       final client = TonClientService.instance.client;
@@ -110,18 +101,11 @@ class WalletTransaction {
   final DateTime timestamp;
   final bool isIncoming;
   final String comment;
-
-  WalletTransaction({
-    required this.hash,
-    required this.amount,
-    required this.timestamp,
-    required this.isIncoming,
-    required this.comment,
-  });
+  WalletTransaction({required this.hash, required this.amount, required this.timestamp, required this.isIncoming, required this.comment});
 }
 
 class TonTransferException implements Exception {
   final String message;
   TonTransferException(this.message);
-  @override String toString() => 'Transfer failed: $message';
+  @override String toString() => message;
 }
