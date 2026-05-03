@@ -18,71 +18,64 @@ class _LoginScreenState extends State<LoginScreen> {
   String _setupPin = '';
   String _error = '';
   bool _canBio = false;
-  bool _loading = false;
-  String _statusText = '';
+  String _bioStatus = '';
 
-  @override void initState() { super.initState(); _checkAuth(); }
+  @override void initState() { super.initState(); _init(); }
 
-  Future<void> _checkAuth() async {
-    setState(() => _loading = true);
+  Future<void> _init() async {
     final prefs = await SharedPreferences.getInstance();
     _storedPin = prefs.getString('app_pin') ?? '';
     _isSetup = _storedPin.isNotEmpty;
 
-    // Check biometric properly
+    // Simple biometric check
     try {
-      final isAvailable = await _auth.isDeviceSupported();
+      final canCheck = await _auth.canCheckBiometrics;
       final bios = await _auth.getAvailableBiometrics();
-      _canBio = isAvailable && bios.isNotEmpty;
-      _statusText = _canBio ? 'Fingerprint available' : 'No biometric';
+      _canBio = canCheck && bios.isNotEmpty;
+      _bioStatus = _canBio ? '🔓 Fingerprint ready' : '🔒 No fingerprint';
     } catch (e) {
       _canBio = false;
-      _statusText = 'Biometric error: ${e.toString().substring(0, 50)}';
+      _bioStatus = '🔒 ${e.toString().substring(0, 30)}';
     }
-    if (mounted) setState(() => _loading = false);
-
-    // Auto-prompt biometric if returning user
-    if (_isSetup && _canBio) {
-      await Future.delayed(const Duration(milliseconds: 800));
-      if (mounted) _tryBio();
-    }
+    if (mounted) setState(() {});
   }
 
-  Future<void> _tryBio() async {
+  Future<void> _bioAuth() async {
     if (!_canBio) return;
-    setState(() => _statusText = 'Scanning fingerprint...');
+    setState(() => _error = 'Scanning...');
     try {
-      final ok = await _auth.authenticate(
-        localizedReason: 'Unlock TeleBank to access your account',
+      final authenticated = await _auth.authenticate(
+        localizedReason: 'Unlock TeleBank',
         options: const AuthenticationOptions(
           stickyAuth: true,
           biometricOnly: true,
           useErrorDialogs: true,
+          sensitiveTransaction: true,
         ),
       );
-      if (ok && mounted) {
-        HapticFeedback.lightImpact();
+      if (authenticated && mounted) {
         _goDashboard();
       }
     } on PlatformException catch (e) {
       if (!mounted) return;
       switch (e.code) {
         case 'NotRecognized':
-        case 'NoBiometricAvailable':
-          setState(() { _error = 'Fingerprint not recognized'; _statusText = ''; });
+          setState(() => _error = 'Fingerprint not recognized');
           break;
         case 'LockedOut':
-          setState(() { _error = 'Too many attempts. Use PIN.'; _statusText = ''; });
+          setState(() => _error = 'Locked out. Use PIN.');
           break;
         case 'NotEnrolled':
-          setState(() { _error = 'No fingerprint enrolled on device'; _statusText = ''; });
+          setState(() => _error = 'No fingerprint set on device');
+          break;
+        case 'AuthInProgress':
+          setState(() => _error = 'Already trying...');
           break;
         default:
-          setState(() { _statusText = 'Try PIN instead'; });
+          setState(() => _error = 'Use PIN instead');
       }
-      HapticFeedback.vibrate();
     } catch (_) {
-      if (mounted) setState(() => _statusText = 'Use PIN to login');
+      if (mounted) setState(() => _error = 'Use PIN');
     }
   }
 
@@ -98,9 +91,9 @@ class _LoginScreenState extends State<LoginScreen> {
   void _checkPin() {
     if (!_isSetup) {
       if (!_confirmMode) {
-        setState(() { _setupPin = _pin; _confirmMode = true; _pin = ''; _error = 'Confirm your PIN'; });
+        setState(() { _setupPin = _pin; _confirmMode = true; _pin = ''; _error = 'Confirm PIN'; });
       } else {
-        if (_pin == _setupPin) { _savePinAndGo(_pin); }
+        if (_pin == _setupPin) { _saveAndGo(_pin); }
         else { setState(() { _error = 'PINs do not match'; _confirmMode = false; _setupPin = ''; _pin = ''; }); HapticFeedback.vibrate(); }
       }
     } else {
@@ -109,7 +102,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  Future<void> _savePinAndGo(String pin) async {
+  Future<void> _saveAndGo(String pin) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('app_pin', pin);
     if (mounted) _goDashboard();
@@ -136,7 +129,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 8),
                 Text(_isSetup ? 'Enter your PIN' : (_confirmMode ? 'Confirm PIN' : 'Create a PIN'),
                   style: const TextStyle(color: Colors.white70, fontSize: 16)),
-                if (_statusText.isNotEmpty && _error.isEmpty) ...[const SizedBox(height: 4), Text(_statusText, style: const TextStyle(color: Colors.white54, fontSize: 12))],
+                if (_bioStatus.isNotEmpty) ...[const SizedBox(height: 4), Text(_bioStatus, style: const TextStyle(color: Colors.white54, fontSize: 12))],
                 if (_error.isNotEmpty) ...[const SizedBox(height: 8), Text(_error, style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold))],
                 const SizedBox(height: 24),
                 Row(mainAxisAlignment: MainAxisAlignment.center,
@@ -156,20 +149,17 @@ class _LoginScreenState extends State<LoginScreen> {
                     _btnIcon(Icons.backspace_outlined, _backspace),
                   ]),
                 const Spacer(),
-                if (_isSetup)
-                  Padding(padding: const EdgeInsets.only(bottom: 20),
-                    child: Column(children: [
-                      OutlinedButton.icon(
-                        onPressed: _canBio ? _tryBio : null,
-                        icon: const Icon(Icons.fingerprint, size: 32),
-                        label: Text(_canBio ? 'Use Fingerprint' : 'No Biometric Available',
-                          style: TextStyle(fontSize: 16, color: _canBio ? Colors.white : Colors.white30)),
-                        style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: _canBio ? Colors.white30 : Colors.white10, width: 2),
-                          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12))),
-                      const SizedBox(height: 8),
-                      Text('Or enter your PIN above', style: TextStyle(color: Colors.white54, fontSize: 12)),
-                    ])),
+                if (_isSetup) ...[
+                  if (_canBio)
+                    OutlinedButton.icon(
+                      onPressed: _bioAuth,
+                      icon: const Icon(Icons.fingerprint, size: 36),
+                      label: const Text('Use Fingerprint', style: TextStyle(fontSize: 16)),
+                      style: OutlinedButton.styleFrom(side: const BorderSide(color: Colors.white30, width: 2), padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14), foregroundColor: Colors.white),
+                    ),
+                  const SizedBox(height: 12),
+                  const Text('Or enter 4-digit PIN above', style: TextStyle(color: Colors.white54)),
+                ],
               ],
             ),
           ),
@@ -178,10 +168,8 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _btn(String t, VoidCallback onTap) => Material(color: Colors.white.withOpacity(0.15), borderRadius: BorderRadius.circular(50),
-    child: InkWell(onTap: onTap, borderRadius: BorderRadius.circular(50),
-      child: Center(child: Text(t, style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w500)))));
-  Widget _btnIcon(IconData i, VoidCallback onTap) => Material(color: Colors.white.withOpacity(0.15), borderRadius: BorderRadius.circular(50),
-    child: InkWell(onTap: onTap, borderRadius: BorderRadius.circular(50),
-      child: Center(child: Icon(i, color: Colors.white, size: 28))));
+  Widget _btn(String t, VoidCallback o) => Material(color: Colors.white.withOpacity(0.15), borderRadius: BorderRadius.circular(50),
+    child: InkWell(onTap: o, borderRadius: BorderRadius.circular(50), child: Center(child: Text(t, style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w500)))));
+  Widget _btnIcon(IconData i, VoidCallback o) => Material(color: Colors.white.withOpacity(0.15), borderRadius: BorderRadius.circular(50),
+    child: InkWell(onTap: o, borderRadius: BorderRadius.circular(50), child: Center(child: Icon(i, color: Colors.white, size: 28))));
 }
