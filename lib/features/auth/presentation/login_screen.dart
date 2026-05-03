@@ -11,7 +11,7 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin {
   final LocalAuthentication _auth = LocalAuthentication();
   String _pin = '';
   String _storedPin = '';
@@ -20,28 +20,62 @@ class _LoginScreenState extends State<LoginScreen> {
   String _setupPin = '';
   String _error = '';
   bool _canBio = false;
+  bool _bioAvailable = false;
+  bool _loading = false;
 
   @override
   void initState() {
     super.initState();
-    _loadPin();
+    _checkAuth();
   }
 
-  Future<void> _loadPin() async {
+  Future<void> _checkAuth() async {
+    setState(() => _loading = true);
     final prefs = await SharedPreferences.getInstance();
     _storedPin = prefs.getString('app_pin') ?? '';
     _isSetup = _storedPin.isNotEmpty;
-    _canBio = prefs.getBool('biometric_enabled') ?? false;
-    if (mounted) setState(() {});
-    if (_isSetup && _canBio) _tryBio();
+
+    try {
+      _bioAvailable = await _auth.canCheckBiometrics;
+      final bios = await _auth.getAvailableBiometrics();
+      _canBio = _bioAvailable && bios.isNotEmpty;
+    } catch (_) {
+      _bioAvailable = false;
+      _canBio = false;
+    }
+    setState(() {
+      _loading = false;
+    });
+
+    // Auto-prompt biometric if available
+    if (_isSetup && _canBio) {
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (mounted) _tryBio();
+    }
   }
 
   Future<void> _tryBio() async {
-    final available = await _auth.canCheckBiometrics;
-    if (!available) return;
+    if (!_canBio) return;
     try {
-      final ok = await _auth.authenticate(localizedReason: 'Unlock TeleBank');
-      if (ok && mounted) _goDashboard();
+      final ok = await _auth.authenticate(
+        localizedReason: 'Unlock TeleBank to access your account',
+        options: const AuthenticationOptions(
+          stickyAuth: true,
+          biometricOnly: true,
+        ),
+      );
+      if (ok && mounted) {
+        HapticFeedback.lightImpact();
+        _goDashboard();
+      }
+    } on PlatformException catch (e) {
+      if (mounted) {
+        // User cancelled or failed - fall back to PIN
+        if (e.code == 'NotRecognized' || e.code == 'NoBiometricAvailable') {
+          setState(() => _error = 'Fingerprint not recognized');
+          HapticFeedback.vibrate();
+        }
+      }
     } catch (_) {}
   }
 
@@ -65,12 +99,20 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!_confirmMode) {
         setState(() { _setupPin = _pin; _confirmMode = true; _pin = ''; _error = 'Confirm your PIN'; });
       } else {
-        if (_pin == _setupPin) { _savePinAndGo(_pin); }
-        else { setState(() { _error = 'PINs do not match'; _confirmMode = false; _setupPin = ''; _pin = ''; }); HapticFeedback.vibrate(); }
+        if (_pin == _setupPin) {
+          _savePinAndGo(_pin);
+        } else {
+          setState(() { _error = 'PINs do not match'; _confirmMode = false; _setupPin = ''; _pin = ''; });
+          HapticFeedback.vibrate();
+        }
       }
     } else {
-      if (_pin == _storedPin) { _goDashboard(); }
-      else { setState(() { _error = 'Wrong PIN'; _pin = ''; }); HapticFeedback.vibrate(); }
+      if (_pin == _storedPin) {
+        _goDashboard();
+      } else {
+        setState(() { _error = 'Wrong PIN'; _pin = ''; });
+        HapticFeedback.vibrate();
+      }
     }
   }
 
@@ -106,7 +148,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 if (_error.isNotEmpty) ...[const SizedBox(height: 8), Text(_error, style: const TextStyle(color: Colors.redAccent))],
                 const SizedBox(height: 32),
                 Row(mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(4, (i) => Container(margin: const EdgeInsets.symmetric(horizontal: 8), width: 16, height: 16,
+                  children: List.generate(4, (i) => AnimatedContainer(
+                    margin: const EdgeInsets.symmetric(horizontal: 8),
+                    width: 16, height: 16,
+                    duration: const Duration(milliseconds: 100),
                     decoration: BoxDecoration(shape: BoxShape.circle,
                       color: i < _pin.length ? AppColors.warmGold : Colors.transparent,
                       border: Border.all(color: AppColors.warmGold, width: 2))))),
@@ -120,9 +165,19 @@ class _LoginScreenState extends State<LoginScreen> {
                   ]),
                 const Spacer(),
                 if (_isSetup && _canBio)
-                  TextButton.icon(onPressed: _tryBio, icon: const Icon(Icons.fingerprint, color: Colors.white),
-                    label: const Text('Use Biometric', style: TextStyle(color: Colors.white))),
-                const SizedBox(height: 20),
+                  Padding(padding: const EdgeInsets.only(bottom: 20),
+                    child: OutlinedButton.icon(
+                      onPressed: _tryBio,
+                      icon: const Icon(Icons.fingerprint, size: 32),
+                      label: const Text('Use Fingerprint', style: TextStyle(fontSize: 16)),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Colors.white30, width: 2),
+                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                        foregroundColor: Colors.white,
+                      ))),
+                if (_isSetup && _bioAvailable && !_canBio)
+                  const Padding(padding: EdgeInsets.only(bottom: 20),
+                    child: Text('Biometric enrollment failed. Use PIN.', style: TextStyle(color: Colors.white54))),
               ],
             ),
           ),

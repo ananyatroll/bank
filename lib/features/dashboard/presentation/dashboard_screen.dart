@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../bank/presentation/bank_home_screen.dart';
 import '../../wallet/presentation/crypto_screen.dart';
-import '../../payment/screens/services_screen.dart';
 import '../../settings/screens/settings_screen.dart';
 import '../../../core/theme.dart';
 
@@ -23,7 +22,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     _tabs = [
       const BankHomeScreen(),
       const CryptoScreen(),
-      const ServicesScreen(),
       SettingsScreen(onThemeChanged: widget.onThemeChanged),
     ];
   }
@@ -51,7 +49,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           items: const [
             BottomNavigationBarItem(icon: Icon(Icons.account_balance), label: 'Home'),
             BottomNavigationBarItem(icon: Icon(Icons.currency_bitcoin), label: 'Crypto'),
-            BottomNavigationBarItem(icon: Icon(Icons.grid_view), label: 'Services'),
             BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
           ],
         ),
