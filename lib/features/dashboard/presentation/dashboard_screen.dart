@@ -7,19 +7,26 @@ import '../../settings/screens/settings_screen.dart';
 import '../../../core/theme.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
-  const DashboardScreen({super.key});
+  final VoidCallback? onThemeChanged;
+  const DashboardScreen({super.key, this.onThemeChanged});
   @override
   ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
 }
 
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   int _currentIndex = 0;
-  final List<Widget> _tabs = [
-    BankHomeScreen(),
-    CryptoScreen(),
-    ServicesScreen(),
-    SettingsScreen(),
-  ];
+  late List<Widget> _tabs;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabs = [
+      const BankHomeScreen(),
+      const CryptoScreen(),
+      const ServicesScreen(),
+      SettingsScreen(onThemeChanged: widget.onThemeChanged),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
