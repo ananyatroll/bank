@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// TeleBank UI - Complete Design System
-/// Based on Ethiopian brand colors with modern Material 3
-
 class AppColors {
   AppColors._();
 
@@ -39,42 +36,91 @@ class AppColors {
   static const Color info = Color(0xFF3B82F6);
   static const Color pending = Color(0xFF8B5CF6);
 
+  // Text Colors
+  static const Color textPrimary = charcoal;
+  static const Color textSecondary = mediumGray;
+  static const Color textHint = Color(0xFFB0B8C4);
+
+  // Background Colors
+  static const Color scaffoldBackground = offWhite;
+  static const Color cardBackground = white;
+  static const Color scaffoldBackgroundDark = bgDark;
+  static const Color cardBackgroundDark = cardDark;
+
   // Gradients
   static const LinearGradient primaryGradient = LinearGradient(
-    colors: [ethiopianGreen, navyBlue, goldenYellow],
+    colors: [
+      Color(0xFF2D7A4F),
+      Color(0xFF1E3A5F),
+      Color(0xFFF4B942),
+    ],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
     stops: [0.0, 0.6, 1.0],
   );
 
   static const LinearGradient buttonGradient = LinearGradient(
-    colors: [ethiopianGreen, tealGreen],
+    colors: [
+      Color(0xFF2D7A4F),
+      Color(0xFF4A9F7A),
+    ],
     begin: Alignment.centerLeft,
     end: Alignment.centerRight,
   );
 
   static const LinearGradient cardGradient = LinearGradient(
-    colors: [navyBlue, lightBlue],
+    colors: [
+      Color(0xFF1E3A5F),
+      Color(0xFF3D5A7F),
+    ],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient goldGradient = LinearGradient(
-    colors: [goldenYellow, warmGold],
+    colors: [
+      Color(0xFFF4B942),
+      Color(0xFFFFC947),
+    ],
     begin: Alignment.centerLeft,
     end: Alignment.centerRight,
   );
 
+  // Shadow System
   static List<BoxShadow> getShadow(int elevation) {
     switch (elevation) {
       case 1:
-        return [BoxShadow(color: navyBlue.withOpacity(0.05), blurRadius: 2, offset: const Offset(0, 1))];
+        return [
+          BoxShadow(
+            color: navyBlue.withOpacity(0.05),
+            blurRadius: 2,
+            offset: const Offset(0, 1),
+          ),
+        ];
       case 2:
-        return [BoxShadow(color: navyBlue.withOpacity(0.08), blurRadius: 4, offset: const Offset(0, 2))];
+        return [
+          BoxShadow(
+            color: navyBlue.withOpacity(0.08),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ];
       case 4:
-        return [BoxShadow(color: navyBlue.withOpacity(0.12), blurRadius: 8, offset: const Offset(0, 4))];
+        return [
+          BoxShadow(
+            color: navyBlue.withOpacity(0.12),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ];
       case 8:
-        return [BoxShadow(color: navyBlue.withOpacity(0.16), blurRadius: 16, offset: const Offset(0, 8))];
+        return [
+          BoxShadow(
+            color: navyBlue.withOpacity(0.16),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ];
       default:
         return [];
     }
@@ -83,33 +129,76 @@ class AppColors {
 
 class AppSpacing {
   AppSpacing._();
-  static const double s4 = 4.0;
-  static const double s8 = 8.0;
-  static const double s12 = 12.0;
-  static const double s16 = 16.0;
-  static const double s20 = 20.0;
-  static const double s24 = 24.0;
-  static const double s32 = 32.0;
-  static const double s40 = 40.0;
-  static const double s48 = 48.0;
+
+  static const double spacing4 = 4.0;
+  static const double spacing8 = 8.0;
+  static const double spacing12 = 12.0;
+  static const double spacing16 = 16.0;
+  static const double spacing20 = 20.0;
+  static const double spacing24 = 24.0;
+  static const double spacing32 = 32.0;
+  static const double spacing40 = 40.0;
+  static const double spacing48 = 48.0;
 }
 
 class AppTextStyles {
   AppTextStyles._();
-  static const String primary = 'Inter';
-  static const String secondary = 'Poppins';
 
-  static const TextStyle h1 = TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.charcoal, fontFamily: primary);
-  static const TextStyle h2 = TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.charcoal, fontFamily: primary);
-  static const TextStyle h3 = TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: AppColors.charcoal, fontFamily: primary);
-  static const TextStyle bodyLg = TextStyle(fontSize: 16, color: AppColors.charcoal, fontFamily: primary);
-  static const TextStyle bodyMd = TextStyle(fontSize: 14, color: AppColors.darkGray, fontFamily: primary);
-  static const TextStyle caption = TextStyle(fontSize: 12, color: AppColors.mediumGray, fontFamily: primary);
-  static const TextStyle button = TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.white, fontFamily: secondary);
+  static const String fontFamilyPrimary = 'Inter';
+  static const String fontFamilySecondary = 'Poppins';
+
+  static const TextStyle heading1 = TextStyle(
+    fontSize: 32,
+    fontWeight: FontWeight.bold,
+    color: AppColors.charcoal,
+    fontFamily: fontFamilyPrimary,
+  );
+
+  static const TextStyle heading2 = TextStyle(
+    fontSize: 24,
+    fontWeight: FontWeight.bold,
+    color: AppColors.charcoal,
+    fontFamily: fontFamilyPrimary,
+  );
+
+  static const TextStyle heading3 = TextStyle(
+    fontSize: 20,
+    fontWeight: FontWeight.w600,
+    color: AppColors.charcoal,
+    fontFamily: fontFamilyPrimary,
+  );
+
+  static const TextStyle bodyLarge = TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.normal,
+    color: AppColors.charcoal,
+    fontFamily: fontFamilyPrimary,
+  );
+
+  static const TextStyle bodyMedium = TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.normal,
+    color: AppColors.darkGray,
+    fontFamily: fontFamilyPrimary,
+  );
+
+  static const TextStyle caption = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.normal,
+    color: AppColors.mediumGray,
+    fontFamily: fontFamilyPrimary,
+  );
+
+  static const TextStyle button = TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.w600,
+    color: AppColors.white,
+    fontFamily: fontFamilySecondary,
+  );
 }
 
-ThemeData buildTeleBankLightTheme() {
-  final base = ThemeData.light().copyWith(
+ThemeData buildLightTheme() {
+  return ThemeData(
     useMaterial3: true,
     primaryColor: AppColors.navyBlue,
     scaffoldBackgroundColor: AppColors.offWhite,
@@ -124,21 +213,15 @@ ThemeData buildTeleBankLightTheme() {
       onError: AppColors.white,
       onSurface: AppColors.charcoal,
     ),
-  );
-
-  return base.copyWith(
     appBarTheme: const AppBarTheme(
       backgroundColor: AppColors.navyBlue,
       foregroundColor: AppColors.white,
       elevation: 0,
-      iconTheme: IconThemeData(color: AppColors.white),
-      titleTextStyle: TextStyle(color: AppColors.white, fontSize: 20, fontWeight: FontWeight.w600, fontFamily: AppTextStyles.primary),
     ),
     cardTheme: CardThemeData(
       color: AppColors.white,
       elevation: 2,
       shadowColor: AppColors.navyBlue.withOpacity(0.1),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
@@ -146,36 +229,45 @@ ThemeData buildTeleBankLightTheme() {
         foregroundColor: AppColors.white,
         elevation: 4,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        textStyle: AppTextStyles.button,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
       ),
     ),
     textButtonTheme: TextButtonThemeData(
-      style: TextButton.styleFrom(foregroundColor: AppColors.goldenYellow),
+      style: TextButton.styleFrom(
+        foregroundColor: AppColors.goldenYellow,
+      ),
     ),
-    iconTheme: const IconThemeData(color: AppColors.navyBlue, size: 24),
+    iconTheme: const IconThemeData(
+      color: AppColors.navyBlue,
+    ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: AppColors.white,
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.lightGray)),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.lightGray)),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.ethiopianGreen, width: 2)),
-      errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.error)),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      hintStyle: const TextStyle(color: AppColors.mediumGray),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: AppColors.lightGray),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: AppColors.ethiopianGreen, width: 2),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
     ),
-    bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-      backgroundColor: AppColors.white,
-      selectedItemColor: AppColors.ethiopianGreen,
-      unselectedItemColor: AppColors.mediumGray,
-      type: BottomNavigationBarType.fixed,
+    textTheme: const TextTheme(
+      displayLarge: AppTextStyles.heading1,
+      headlineMedium: AppTextStyles.heading2,
+      titleLarge: AppTextStyles.heading3,
+      bodyLarge: AppTextStyles.bodyLarge,
+      bodyMedium: AppTextStyles.bodyMedium,
+      labelSmall: AppTextStyles.caption,
     ),
-    dividerTheme: const DividerThemeData(color: AppColors.lightGray, thickness: 1, space: 1),
   );
 }
 
-ThemeData buildTeleBankDarkTheme() {
-  final base = ThemeData.dark().copyWith(
+ThemeData buildDarkTheme() {
+  return ThemeData(
     useMaterial3: true,
     primaryColor: AppColors.navyBlue,
     scaffoldBackgroundColor: AppColors.bgDark,
@@ -190,21 +282,15 @@ ThemeData buildTeleBankDarkTheme() {
       onError: AppColors.white,
       onSurface: AppColors.textPrimaryDark,
     ),
-  );
-
-  return base.copyWith(
     appBarTheme: const AppBarTheme(
       backgroundColor: AppColors.navyBlue,
       foregroundColor: AppColors.white,
       elevation: 0,
-      iconTheme: IconThemeData(color: AppColors.white),
-      titleTextStyle: TextStyle(color: AppColors.white, fontSize: 20, fontWeight: FontWeight.w600, fontFamily: AppTextStyles.primary),
     ),
     cardTheme: CardThemeData(
       color: AppColors.cardDark,
       elevation: 2,
       shadowColor: Colors.black.withOpacity(0.3),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
@@ -212,29 +298,42 @@ ThemeData buildTeleBankDarkTheme() {
         foregroundColor: AppColors.navyBlue,
         elevation: 4,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
       ),
     ),
     textButtonTheme: TextButtonThemeData(
-      style: TextButton.styleFrom(foregroundColor: AppColors.warmGold),
+      style: TextButton.styleFrom(
+        foregroundColor: AppColors.warmGold,
+      ),
     ),
-    iconTheme: const IconThemeData(color: AppColors.white, size: 24),
+    iconTheme: const IconThemeData(
+      color: AppColors.white,
+    ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: AppColors.cardDark,
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.lightBlue)),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.lightBlue)),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.tealGreen, width: 2)),
-      errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.error)),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      hintStyle: const TextStyle(color: AppColors.textSecondaryDark),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: AppColors.lightBlue),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: AppColors.tealGreen, width: 2),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
     ),
-    bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-      backgroundColor: AppColors.cardDark,
-      selectedItemColor: AppColors.tealGreen,
-      unselectedItemColor: AppColors.textSecondaryDark,
-      type: BottomNavigationBarType.fixed,
+    textTheme: const TextTheme(
+      displayLarge: AppTextStyles.heading1,
+      headlineMedium: AppTextStyles.heading2,
+      titleLarge: AppTextStyles.heading3,
+      bodyLarge: AppTextStyles.bodyLarge,
+      bodyMedium: AppTextStyles.bodyMedium,
+      labelSmall: AppTextStyles.caption,
+    ).apply(
+      bodyColor: AppColors.textPrimaryDark,
+      displayColor: AppColors.textPrimaryDark,
     ),
-    dividerTheme: const DividerThemeData(color: AppColors.lightBlue, thickness: 1, space: 1),
   );
 }

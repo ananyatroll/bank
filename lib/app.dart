@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/theme.dart';
-import 'config/routes.dart';
+import 'features/auth/presentation/login_screen.dart';
+import 'features/bank/presentation/bank_select_screen.dart';
+import 'features/dashboard/presentation/dashboard_screen.dart';
 
 class TeleBankApp extends StatelessWidget {
   const TeleBankApp({super.key});
@@ -10,11 +13,14 @@ class TeleBankApp extends StatelessWidget {
     return MaterialApp(
       title: 'TeleBank',
       debugShowCheckedModeBanner: false,
-      theme: buildTeleBankLightTheme(),
-      darkTheme: buildTeleBankDarkTheme(),
+      theme: buildLightTheme(),
+      darkTheme: buildDarkTheme(),
       themeMode: ThemeMode.system,
-      initialRoute: AppRoutes.splash,
-      onGenerateRoute: AppRoutes.onGenerateRoute,
+      home: const LoginScreen(),
+      routes: {
+        '/bank-select': (_) => const BankSelectScreen(),
+        '/dashboard': (_) => const DashboardScreen(),
+      },
     );
   }
 }

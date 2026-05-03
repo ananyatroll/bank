@@ -2,6 +2,7 @@ enum BankId {
   cbe,
   dashen,
   awash,
+  coop,
   other,
 }
 
@@ -33,6 +34,8 @@ class BankBalance {
         return 'Dashen';
       case BankId.awash:
         return 'Awash';
+      case BankId.coop:
+        return 'COOP';
       case BankId.other:
         return 'Other';
     }
