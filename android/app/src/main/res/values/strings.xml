@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">TeleBank</string>
+    <string name="ussd_service_description">TeleBank reads USSD responses for the graphical UI.</string>
+</resources>
