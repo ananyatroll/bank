@@ -19,6 +19,7 @@ dependencies:
   hive_flutter: ^1.1.0
   flutter_secure_storage: ^9.0.0
   shared_preferences: ^2.2.2
+  supabase_flutter: ^2.3.4
   
   # Biometric Authentication
   local_auth: ^2.1.7

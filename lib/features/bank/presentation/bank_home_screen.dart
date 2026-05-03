@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../services/supabase_service.dart';
 import '../../../core/theme.dart';
 import '../../../config/constants.dart';
 import '../../ussd/presentation/ussd_screen.dart';
@@ -11,39 +12,53 @@ class BankHomeScreen extends StatefulWidget {
 
 class _BankHomeScreenState extends State<BankHomeScreen> {
   String _username = '';
-  double _balance = 4250.00;
+  String? _userId;
+  double _balance = 100.00; // Sign-up bonus
   bool _showBalance = true;
   List<Map<String, dynamic>> _txns = [];
+  bool _loading = true;
 
   @override void initState() { super.initState(); _load(); }
 
   Future<void> _load() async {
+    setState(() => _loading = true);
     final p = await SharedPreferences.getInstance();
     _username = p.getString('username') ?? '';
-    _balance = p.getDouble('wallet_balance') ?? 4250.00;
-    final ts = p.getStringList('telebank_txns') ?? [];
-    if (ts.isEmpty) {
-      _txns = [
-        {'title': 'Salary Deposit', 'date': 'Today, 9:00 AM', 'amount': '+ETB 3,500.00', 'in': true},
-        {'title': 'Airtime Purchase', 'date': 'Yesterday, 3:15 PM', 'amount': '-ETB 100.00', 'in': false},
-        {'title': 'Bill Payment - Ethio Telecom', 'date': 'May 2, 11:30 AM', 'amount': '-ETB 450.00', 'in': false},
-      ];
-    } else {
-      for (final t in ts) { final parts = t.split('|'); if (parts.length >= 4) _txns.add({'title': parts[0], 'date': parts[1], 'amount': parts[2], 'in': parts[3] == '1'}); }
+
+    // Try Supabase first
+    final userId = p.getString('supabase_user_id');
+    if (userId != null) {
+      _userId = userId;
+      final bal = await SupabaseService.getBalance(userId);
+      if (bal != null) _balance = bal;
+      final txns = await SupabaseService.getTransactions(userId);
+      _txns = txns.map((t) => {
+        'title': t['description'] ?? t['type'] ?? 'Transaction',
+        'date': (t['created_at'] ?? '').toString().substring(0, 16).replaceFirst('T', ' '),
+        'amount': "${t['sender_id'] == userId ? '-' : '+'}ETB ${double.parse(t['amount'].toString()).toStringAsFixed(2)}",
+        'in': t['receiver_id'] == userId,
+      }).toList();
     }
-    if (mounted) setState(() {});
+    setState(() => _loading = false);
   }
 
   Future<void> _saveTxn(String title, String amount, bool isIn) async {
-    final p = await SharedPreferences.getInstance();
     final now = DateTime.now();
     final dateStr = '${now.month}/${now.day}, ${now.hour}:${now.minute.toString().padLeft(2, '0')} ${now.hour >= 12 ? 'PM' : 'AM'}';
     _txns.insert(0, {'title': title, 'date': dateStr, 'amount': amount, 'in': isIn});
-    await p.setStringList('telebank_txns', _txns.map((t) => '${t['title']}|${t['date']}|${t['amount']}|${t['in'] ? 1 : 0}').toList());
+    final p = await SharedPreferences.getInstance();
+    final ts = p.getStringList('telebank_txns') ?? [];
+    ts.insert(0, '$title|$dateStr|$amount|${isIn ? 1 : 0}');
+    await p.setStringList('telebank_txns', ts);
     setState(() {});
   }
 
-  Future<void> _saveBal(double b) async { final p = await SharedPreferences.getInstance(); await p.setDouble('wallet_balance', b); _balance = b; setState(() {}); }
+  Future<void> _saveBal(double b) async {
+    final p = await SharedPreferences.getInstance();
+    await p.setDouble('wallet_balance', b);
+    _balance = b;
+    setState(() {});
+  }
 
   void _checkUsername() { if (_username.isEmpty) _showUsernameDialog(); }
 
@@ -91,17 +106,35 @@ class _BankHomeScreenState extends State<BankHomeScreen> {
 
   void _showSendBirr() { _checkUsername(); _showDialog(title: '💸 Send Birr', icon: Icons.send, color: AppColors.ethiopianGreen, fieldLabel: 'Recipient @Username', fieldHint: 'john_doe', onConfirm: (val, amt) async {
     if (val.isEmpty) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter username'))); return; }
-    _saveBal(_balance - amt); _saveTxn('Sent to @$val', '-ETB ${amt.toStringAsFixed(2)}', false);
+    if (_userId != null) {
+      final result = await SupabaseService.sendMoney(_userId!, val, amt, 'send');
+      if (result.containsKey('error')) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result['error'])));
+        _load();
+        return;
+      }
+      _load();
+    } else {
+      _saveBal(_balance - amt);
+      _saveTxn('Sent to @$val', '-ETB ${amt.toStringAsFixed(2)}', false);
+    }
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Sent ETB ${amt.toStringAsFixed(2)} to @$val')));
   });}
 
   void _showRequest() { _showDialog(title: '📥 Request Money', icon: Icons.arrow_downward, color: AppColors.info, fieldLabel: 'Request from @Username', onConfirm: (val, amt) async {
-    _saveTxn('Request to @$val', '+ETB ${amt.toStringAsFixed(2)}', true);
+    if (_userId != null) {
+      final result = await SupabaseService.sendMoney(_userId!, val, amt, 'request');
+      if (result.containsKey('error')) { ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result['error']))); _load(); return; }
+      _load();
+    } else {
+      _saveTxn('Request to @$val', '+ETB ${amt.toStringAsFixed(2)}', true);
+    }
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Request sent!')));
   });}
 
   void _showAirtime() { _showDialog(title: '📱 Buy Airtime', icon: Icons.phone_android, color: AppColors.navyBlue, fieldLabel: 'Phone Number', fieldHint: '09XXXXXXXX', keyType: TextInputType.phone, onConfirm: (val, amt) async {
-    _saveBal(_balance - amt); _saveTxn('Airtime - $val', '-ETB ${amt.toStringAsFixed(2)}', false);
+    if (_userId != null) { final result = await SupabaseService.sendMoney(_userId!, 'SYSTEM', amt, 'airtime'); if (result.containsKey('error')) { ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result['error']))); return; } _load(); }
+    else { _saveBal(_balance - amt); _saveTxn('Airtime - $val', '-ETB ${amt.toStringAsFixed(2)}', false); }
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Airtime purchased!')));
   });}
 
